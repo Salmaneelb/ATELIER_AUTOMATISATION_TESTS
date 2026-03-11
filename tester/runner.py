@@ -1,5 +1,5 @@
-
-import datetime, statistics
+import datetime
+import statistics
 from tester.tests import ALL_TESTS, run_test
 
 def run_all() -> dict:
@@ -20,7 +20,10 @@ def run_all() -> dict:
         "base_url": "https://api.frankfurter.app",
         "timestamp": timestamp,
         "summary": {
-            "total": total, "passed": passed, "failed": failed, "errors": errors,
+            "total": total,
+            "passed": passed,
+            "failed": failed,
+            "errors": errors,
             "error_rate": round((failed + errors) / total, 4) if total else None,
             "availability": round(passed / total, 4) if total else None,
             "latency_ms_avg": avg,
@@ -28,11 +31,3 @@ def run_all() -> dict:
         },
         "tests": results,
     }
-```
-
----
-
-## 7️⃣ `requirements.txt` — Remplace le contenu
-```
-flask>=3.0.0
-requests>=2.31.0
