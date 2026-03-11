@@ -1,1 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Frankfurter API Tests</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
 
+    header {
+      background: linear-gradient(135deg, #1e3a5f, #0e2a45);
+      padding: 24px 40px;
+      border-bottom: 2px solid #2d6a9f;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 1.6rem; font-weight: 700; color: #63b3ed; }
+    header p  { font-size: 0.85rem; color: #90cdf4; margin-top: 4px; }
+    .actions a {
+      display: inline-block; margin-left: 10px; padding: 8px 16px;
+      background: #2d6a9f; color: #fff; border-radius: 6px;
+      text-decoration: none; font-size: 0.85rem; font-weight: 600;
+      transition: background 0.2s;
+    }
+    .actions a:hover { background: #3182ce; }
+    .actions a.run-btn { background: #276749; }
+    .actions a.run-btn:hover { background: #38a169; }
+
+    main { padding: 32px 40px; }
+
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px; margin-bottom: 36px;
+    }
+    .kpi {
+      background: #1a202c; border: 1px solid #2d3748; border-radius: 10px;
+      padding: 20px 16px; text-align: center;
+    }
+    .kpi .label { font-size: 0.75rem; color: #718096; text-transform: uppercase; letter-spacing: 1px; }
+    .kpi .value { font-size: 1.8rem; font-weight: 700; margin-top: 6px; }
+    .kpi.green  .value { color: #68d391; }
+    .kpi.red    .value { color: #fc8181; }
+    .kpi.blue   .value { color: #63b3ed; }
+    .kpi.yellow .value { color: #fbd38d; }
+    .kpi.gray   .value { color: #a0aec0; }
+
+    .section-title {
+      font-size: 1.1rem; font-weight: 600; color: #90cdf4;
+      margin-bottom: 16px; padding-bottom: 8px;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    .tests-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 12px; margin-bottom: 40px;
+    }
+    .test-card {
+      background: #1a202c; border-radius: 8px; padding: 14px 16px;
+      border-left: 4px solid #4a5568;
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .test-card.pass  { border-left-color: #38a169; }
+    .test-card.fail  { border-left-color: #e53e3e; }
+    .test-card.error { border-left-color: #d69e2e; }
+    .test-name   { font-size: 0.85rem; font-weight: 500; flex: 1; }
+    .test-detail { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+    .test-badge {
+      font-size: 0.72rem; font-weight: 700; padding: 3px 8px;
+      border-radius: 12px; white-space: nowrap; margin-left: 10px;
+    }
+    .badge-pass  { background: #276749; color: #9ae6b4; }
+    .badge-fail  { background: #742a2a; color: #feb2b2; }
+    .badge-error { background: #744210; color: #fefcbf; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th {
+      background: #1a202c; color: #90cdf4; text-align: left;
+      padding: 10px 14px; font-weight: 600; border-bottom: 2px solid #2d3748;
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid #2d3748; }
+    tr:hover td { background: #1e2533; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
+    .pill-green  { background: #276749; color: #9ae6b4; }
+    .pill-red    { background: #742a2a; color: #feb2b2; }
+    .pill-yellow { background: #744210; color: #fefcbf; }
+
+    .no-data { color: #718096; text-align: center; padding: 40px; font-size: 0.9rem; }
+
+    footer {
+      text-align: center; padding: 24px; color: #4a5568;
+      font-size: 0.78rem; border-top: 1px solid #1a202c; margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 Frankfurter API — Dashboard de tests</h1>
+    <p>API : <strong>https://api.frankfurter.app</strong> &nbsp;|&nbsp; No Auth &nbsp;|&nbsp; Source : Banque Centrale Européenne</p>
+  </div>
+  <div class="actions">
+    <a href="/health">🩺 Health</a>
+    <a href="/export">⬇️ Export JSON</a>
+    <a href="/run" class="run-btn">▶ Lancer un run</a>
+  </div>
+</header>
+
+<main>
+
+  {% if last %}
+  {% set s = last.summary %}
+  <div class="kpi-grid">
+    <div class="kpi {{ 'green' if s.availability >= 0.8 else 'red' }}">
+      <div class="label">Disponibilité</div>
+      <div class="value">{{ "%.0f"|format(s.availability * 100) }}%</div>
+    </div>
+    <div class="kpi green">
+      <div class="label">Tests passés</div>
+      <div class="value">{{ s.passed }}</div>
+    </div>
+    <div class="kpi {{ 'red' if s.failed > 0 else 'gray' }}">
+      <div class="label">Tests échoués</div>
+      <div class="value">{{ s.failed }}</div>
+    </div>
+    <div class="kpi {{ 'yellow' if s.errors > 0 else 'gray' }}">
+      <div class="label">Erreurs</div>
+      <div class="value">{{ s.errors }}</div>
+    </div>
+    <div class="kpi blue">
+      <div class="label">Latence moy.</div>
+      <div class="value">{{ s.latency_ms_avg }}ms</div>
+    </div>
+    <div class="kpi {{ 'yellow' if s.latency_ms_p95 and s.latency_ms_p95 > 1500 else 'blue' }}">
+      <div class="label">Latence p95</div>
+      <div class="value">{{ s.latency_ms_p95 }}ms</div>
+    </div>
+    <div class="kpi {{ 'red' if s.error_rate > 0.2 else 'green' }}">
+      <div class="label">Taux d'erreur</div>
+      <div class="value">{{ "%.0f"|format(s.error_rate * 100) }}%</div>
+    </div>
+  </div>
+
+  <div class="section-title">🔬 Dernier run — {{ last.timestamp[:19].replace('T', ' ') }} UTC</div>
+  <div class="tests-grid">
+    {% for t in last.tests %}
+    <div class="test-card {{ t.status.lower() }}">
+      <div>
+        <div class="test-name">{{ t.name }}</div>
+        <div class="test-detail">
+          {% if t.latency_ms %}⏱ {{ t.latency_ms }}ms{% endif %}
+          {% if t.details %} · {{ t.details }}{% endif %}
+          {% if t.retried %} · 🔁 retenté{% endif %}
+        </div>
+      </div>
+      <span class="test-badge badge-{{ t.status.lower() }}">{{ t.status }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="no-data">
+    Aucun run effectué pour l'instant.<br>
+    Cliquez sur <strong>▶ Lancer un run</strong> pour démarrer.
+  </div>
+  {% endif %}
+
+  <div class="section-title" style="margin-top: 20px;">📋 Historique des runs (20 derniers)</div>
+  {% if runs %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Timestamp (UTC)</th>
+        <th>API</th>
+        <th>Passés</th>
+        <th>Échoués</th>
+        <th>Erreurs</th>
+        <th>Dispo.</th>
+        <th>Taux err.</th>
+        <th>Lat. moy.</th>
+        <th>Lat. p95</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td><a href="/run/{{ r.id }}" style="color:#63b3ed">{{ r.id }}</a></td>
+        <td>{{ r.timestamp[:19].replace('T', ' ') }}</td>
+        <td>{{ r.api }}</td>
+        <td><span class="pill pill-green">{{ r.passed }}</span></td>
+        <td>
+          {% if r.failed > 0 %}<span class="pill pill-red">{{ r.failed }}</span>
+          {% else %}<span class="pill pill-green">0</span>{% endif %}
+        </td>
+        <td>
+          {% if r.errors > 0 %}<span class="pill pill-yellow">{{ r.errors }}</span>
+          {% else %}0{% endif %}
+        </td>
+        <td>{{ "%.0f"|format(r.availability * 100) }}%</td>
+        <td>{{ "%.1f"|format(r.error_rate * 100) }}%</td>
+        <td>{{ r.latency_avg }}ms</td>
+        <td>{{ r.latency_p95 }}ms</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="no-data">Aucun historique disponible.</div>
+  {% endif %}
+
+</main>
+
+<footer>
+  Atelier M1 — Tests API automatisés · Frankfurter (api.frankfurter.app) · Flask + SQLite + PythonAnywhere
+</footer>
+
+</body>
+</html>
