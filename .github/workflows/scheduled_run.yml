@@ -1,0 +1,28 @@
+name: Scheduled API Tests
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # toutes les heures
+  workflow_dispatch:       # permet aussi de lancer manuellement
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Trigger run on PythonAnywhere
+        run: |
+          curl -f "https://salmaneelb.pythonanywhere.com/run" \
+            --max-time 60 \
+            --retry 2
