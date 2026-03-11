@@ -7,8 +7,6 @@ Internet est rempli d’API publiques : météo, devises, citations, géolocalis
 Mais une API, ce n’est pas juste une URL qui répond. C’est un service.
 Et un service doit être fiable, mesurable et surveillé.  
 
-
-  
 Votre mission :  
   
 👉 Choisir une API publique.  
